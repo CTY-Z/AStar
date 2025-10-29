@@ -4,6 +4,13 @@ using UnityEngine;
 
 namespace CMAStar
 {
+    [System.Serializable]
+    public class TerrainType
+    {
+        public LayerMask layerMask;
+        public int terrainPenalty;
+    }
+
     public class CMGrid : MonoBehaviour
     {
         public bool displayGridGizmos;
@@ -11,19 +18,29 @@ namespace CMAStar
         public LayerMask unwalkableMask;
         public Vector2 gridWorldSize;
         public float nodeRadius;
-        
+        public TerrainType[] array_walkableRegion;
+
+
         public int maxSize { get { return gridSizeX * gridSizeY; } }
         
 
         CMNode[,] grid;
         float nodeDiameter;
         int gridSizeX, gridSizeY;
+        private LayerMask walkableMask;
+        private Dictionary<float, int> dic_walkableRegion = new();
 
         private void Awake()
         {
             nodeDiameter = nodeRadius * 2;
             gridSizeX = Mathf.RoundToInt(gridWorldSize.x / nodeDiameter);
             gridSizeY = Mathf.RoundToInt(gridWorldSize.y / nodeDiameter);
+
+            foreach (TerrainType type in array_walkableRegion)
+            {
+                walkableMask.value |= type.layerMask.value;
+                dic_walkableRegion.Add(Mathf.Log(type.layerMask.value, 2), type.terrainPenalty);
+            }
 
             CreateGrid();
         }
@@ -43,7 +60,17 @@ namespace CMAStar
                         + Vector3.forward * (y * nodeDiameter + nodeRadius);
 
                     bool walkable = !(Physics.CheckSphere(worldPoint, nodeRadius, unwalkableMask));
-                    grid[x, y] = new CMNode(walkable, worldPoint, x, y);
+
+                    int movementPenalty = 0;
+                    if (walkable)
+                    {
+                        Ray ray = new Ray(worldPoint + Vector3.up * 50, Vector3.down);
+                        RaycastHit hit;
+                        if(Physics.Raycast(ray, out hit, 100, walkableMask))
+                            dic_walkableRegion.TryGetValue(hit.collider.gameObject.layer, out movementPenalty);
+                    }
+
+                    grid[x, y] = new CMNode(walkable, worldPoint, x, y, movementPenalty);
 
                 }
             }

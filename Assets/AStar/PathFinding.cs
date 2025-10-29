@@ -70,7 +70,7 @@ namespace CMAStar
                         if (!neighbour.walkable || closedSet.Contains(neighbour))
                             continue;
 
-                        int newMovementCostToNeighbour = curNode.gCost + GetDistance(curNode, neighbour);
+                        int newMovementCostToNeighbour = curNode.gCost + GetDistance(curNode, neighbour) + neighbour.movementPenalty;
                         if (newMovementCostToNeighbour < neighbour.gCost || !openSet.Contains(neighbour))
                         {
                             neighbour.gCost = newMovementCostToNeighbour;
@@ -79,6 +79,8 @@ namespace CMAStar
 
                             if (!openSet.Contains(neighbour))
                                 openSet.Add(neighbour);
+                            else
+                                openSet.UpdateItem(neighbour);
                         }
                     }
                 }

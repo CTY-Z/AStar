@@ -11,6 +11,7 @@ namespace CMAStar
 
         public int gridX;
         public int gridY;
+        public int movementPenalty;
 
         public int gCost;
         public int hCost;
@@ -25,12 +26,13 @@ namespace CMAStar
 
         public CMNode parent;
 
-        public CMNode(bool walkable, Vector3 worldPos, int gridX, int gridY)
+        public CMNode(bool walkable, Vector3 worldPos, int gridX, int gridY, int movementPenalty)
         {
             this.walkable = walkable;
             this.worldPosition = worldPos;
             this.gridX = gridX;
             this.gridY = gridY;
+            this.movementPenalty = movementPenalty;
         }
 
         public int CompareTo(CMNode other)
