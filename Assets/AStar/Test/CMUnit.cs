@@ -5,42 +5,101 @@ using UnityEngine;
 
 public class CMUnit : MonoBehaviour
 {
+    const float minPathUpdateTime = .2f;
+    const float pathUpdateMoveThreshold = .5f;
+
     public Transform target;
-    float speed = 20.0f;
+    public float speed = 20.0f;
+    public float turnDst = 5.0f;
+    public float turnSpeed = 3f;
+    public float stoppingDst = 10;
+
+    CMPath path;
+
     Vector3[] array_path;
     int targetIdx;
 
     private void Start()
     {
-        PathRequestManager.RequestPath(this.transform.position, target.position, OnPathFound);
+        StartCoroutine(UpdatePath());
     }
 
-    public void OnPathFound(Vector3[] path, bool success)
+    public void OnPathFound(Vector3[] waypoints, bool success)
     {
         if (success)
         {
-            array_path = path;
+            path = new CMPath(waypoints, transform.position, turnDst, stoppingDst);
             StopCoroutine(FollowPath());
             StartCoroutine(FollowPath());
         }
     }
 
-    IEnumerator FollowPath()
+    IEnumerator UpdatePath()
     {
-        Vector3 curWaypoint = array_path[0];
+        if(Time.timeSinceLevelLoad < .3f)
+            yield return new WaitForSeconds(.3f);
+
+        PathRequestManager.RequestPath(transform.position, target.position, OnPathFound);
+
+        float sqrMoveThreshold = pathUpdateMoveThreshold * pathUpdateMoveThreshold;
+        Vector3 targetPosOld = target.position;
 
         while (true)
         {
-            if(transform.position == curWaypoint)
+            yield return new WaitForSeconds(minPathUpdateTime);
+            if((target.position - targetPosOld).sqrMagnitude > sqrMoveThreshold)
             {
-                targetIdx++;
-                if (targetIdx >= array_path.Length)
-                    yield break;
+                PathRequestManager.RequestPath(transform.position, target.position, OnPathFound);
+                targetPosOld = target.position;
+            }
+        }
+    }
 
-                curWaypoint = array_path[targetIdx];
+    IEnumerator FollowPath()
+    {
+        bool followingPath = true;
+        int pathIdx = 0;
+        transform.LookAt(path.array_lookPoint[0]);
+
+        float speedPercent = 1.0f;
+
+        while (followingPath)
+        {
+            Vector2 pos2D = new Vector2(transform.position.x, transform.position.z);
+
+            //todo:fixed
+            if (pathIdx < path.array_turnBoundary.Length)
+            {
+                while (path.array_turnBoundary[pathIdx].HasCrossedLine(pos2D))
+                {
+                    if (pathIdx == path.finishLineIdx)
+                    {
+                        followingPath = false;
+                        break;
+                    }
+                    else
+                        pathIdx++;
+                }
             }
 
-            transform.position = Vector3.MoveTowards(transform.position, curWaypoint, speed * Time.deltaTime);
+            if (followingPath)
+            {
+                if(pathIdx >= path.slowdownIdx && stoppingDst >0)
+                {
+                    speedPercent = Mathf.Clamp01(path.array_turnBoundary[path.finishLineIdx].DistanceFromPoint(pos2D) / stoppingDst);
+                    if (speedPercent < 0.01f)
+                        followingPath = false;
+                }
+
+                //todo:fixed
+                if (pathIdx < path.array_lookPoint.Length)
+                {
+                    Quaternion q = Quaternion.LookRotation(path.array_lookPoint[pathIdx] - transform.position);
+                    transform.rotation = Quaternion.Lerp(transform.rotation, q, Time.deltaTime * turnSpeed);
+                    transform.Translate(Vector3.forward * Time.deltaTime * speed * speedPercent, Space.Self);
+                }
+            }
+
             yield return null;
         }
 
@@ -48,19 +107,8 @@ public class CMUnit : MonoBehaviour
 
     public void OnDrawGizmos()
     {
-        if(array_path != null)
-        {
-            for (int i = targetIdx; i < array_path.Length; i++)
-            {
-                Gizmos.color = Color.black;
-                Gizmos.DrawCube(array_path[i], Vector3.one);
-
-                if (i == targetIdx)
-                    Gizmos.DrawLine(transform.position, array_path[i]);
-                else
-                    Gizmos.DrawLine(array_path[i - 1], array_path[i]);
-            }
-        }
+        if(path != null)
+            path.DrawWithGizmos();
     }
 
 }

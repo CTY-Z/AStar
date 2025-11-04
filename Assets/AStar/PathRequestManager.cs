@@ -40,6 +40,13 @@ namespace CMAStar
             instance.TryProcessNext();
         }
 
+        public void FinishedProcessingPath(Vector3[] path, bool success)
+        {
+            curPathRequest.callback(path, success);
+            isProcessingPath = false;
+            TryProcessNext();
+        }
+
         private void TryProcessNext()
         {
             if (!isProcessingPath && queue_pathRequest.Count > 0)
@@ -50,12 +57,7 @@ namespace CMAStar
             }
         }
 
-        public void FinishedProcessingPath(Vector3[] path, bool success)
-        {
-            curPathRequest.callback(path, success);
-            isProcessingPath = false;
-            TryProcessNext();
-        }
+
     }
 }
 

@@ -44,16 +44,7 @@ namespace CMAStar
                 while (openSet.Count > 0)
                 {
                     CMNode curNode = openSet.RemoveFirst();
-                    /*
-                    for (int i = 1; i < openSet.Count; i++)
-                    {
-                        if (openSet[i].fCost < curNode.fCost 
-                            || openSet[i].fCost == curNode.fCost && openSet[i].hCost < curNode.hCost)
-                            curNode = openSet[i];
-                    }
 
-                    openSet.Remove(curNode);
-                    */
                     closedSet.Add(curNode);
 
                     if (curNode == targetNode)

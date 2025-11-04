@@ -246,7 +246,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 729887975}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.24, y: 0.5, z: -2.41}
+  m_LocalPosition: {x: -3.41, y: 0.5, z: -2.76}
   m_LocalScale: {x: 2.32, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -347,12 +347,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b967fe1ab5542140a1cba4b61dc8caa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  displayGridGizmos: 0
+  displayGridGizmos: 1
   unwalkableMask:
     serializedVersion: 2
     m_Bits: 64
   gridWorldSize: {x: 100, y: 100}
   nodeRadius: 0.5
+  array_walkableRegion: []
+  obstacleProximityPenalty: 10
 --- !u!4 &1016102614
 Transform:
   m_ObjectHideFlags: 0
@@ -420,7 +422,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1249068884}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.19, y: 0.5, z: -1.57}
+  m_LocalPosition: {x: -2.5, y: 0.5, z: -3.26}
   m_LocalScale: {x: 1.2847, y: 1, z: 2.8255}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -963,7 +965,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1864566212}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -42.3, y: 1, z: -41.1}
+  m_LocalPosition: {x: -36.6, y: 1, z: -37.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -983,3 +985,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 1725060063}
+  speed: 20
+  turnDst: 5
