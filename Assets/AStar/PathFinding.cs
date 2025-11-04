@@ -18,12 +18,7 @@ namespace CMAStar
             grid = GetComponent<CMGrid>();
         }
 
-        public void StartFindPath(Vector3 startPos, Vector3 endPos)
-        {
-            StartCoroutine(FindPath(startPos, endPos));
-        }
-
-        private IEnumerator FindPath(Vector3 startPos, Vector3 targetPos)
+        public void FindPath(PathRequest request, Action<PathResult> callback)
         {
             Stopwatch sw = new();
             sw.Start();
@@ -31,8 +26,8 @@ namespace CMAStar
             Vector3[] array_wayPoint = new Vector3[0];
             bool pathSuccess = false;
 
-            CMNode startNode = grid.GetNodeFormWorldPoint(startPos);
-            CMNode targetNode = grid.GetNodeFormWorldPoint(targetPos);
+            CMNode startNode = grid.GetNodeFormWorldPoint(request.pathStart);
+            CMNode targetNode = grid.GetNodeFormWorldPoint(request.pathEnd);
 
             if(startNode.walkable && targetNode.walkable)
             {
@@ -77,11 +72,13 @@ namespace CMAStar
                 }
             }
 
-            yield return null;
             if (pathSuccess)
+            {
                 array_wayPoint = RetracePath(startNode, targetNode);
+                pathSuccess = array_wayPoint.Length > 0;
+            }
 
-            PathRequestManager.instance.FinishedProcessingPath(array_wayPoint, pathSuccess);
+            callback(new PathResult(array_wayPoint, pathSuccess, request.callback));
         }
 
         private Vector3[] RetracePath(CMNode startNode, CMNode endNode)

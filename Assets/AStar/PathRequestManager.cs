@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Threading;
 
 namespace CMAStar
 {
@@ -20,11 +21,24 @@ namespace CMAStar
         }
     }
 
+    public struct PathResult
+    {
+        public Vector3[] array_path;
+        public bool success;
+        public Action<Vector3[], bool> callback;
+
+        public PathResult(Vector3[] array_path, bool success, Action<Vector3[], bool> callback)
+        {
+            this.array_path = array_path;
+            this.success = success;
+            this.callback = callback;
+        }
+    }
+
     public class PathRequestManager : CMSingleton<PathRequestManager>
     {
-        Queue<PathRequest> queue_pathRequest = new();
-        PathRequest curPathRequest;
-        
+        Queue<PathResult> queue_result = new();
+
         PathFinding pathFinding;
         bool isProcessingPath;
 
@@ -32,6 +46,43 @@ namespace CMAStar
         {
             pathFinding = GetComponent<PathFinding>();
         }
+
+        private void Update()
+        {
+            if (queue_result.Count > 0)
+            {
+                int itemInQueue = queue_result.Count;
+                lock (queue_result)
+                {
+                    for (int i = 0; i < itemInQueue; i++)
+                    {
+                        PathResult result = queue_result.Dequeue();
+                        result.callback(result.array_path, result.success);
+                    }
+                }
+            }
+        }
+
+        public static void RequestPath(PathRequest request)
+        {
+            ThreadStart threadStart = delegate
+            {
+                instance.pathFinding.FindPath(request, instance.FinishedProcessingPath);
+            };
+            threadStart.Invoke();
+        }
+
+        public void FinishedProcessingPath(PathResult result)
+        {
+            lock (queue_result)
+            {
+                queue_result.Enqueue(result);
+            }
+        }
+
+        /*
+        Queue<PathRequest> queue_pathRequest = new();
+        PathRequest curPathRequest;
 
         public static void RequestPath(Vector3 pathStart, Vector3 pathEnd, Action<Vector3[], bool> callback)
         {
@@ -56,7 +107,7 @@ namespace CMAStar
                 pathFinding.StartFindPath(curPathRequest.pathStart, curPathRequest.pathEnd);
             }
         }
-
+        */
 
     }
 }
